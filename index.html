@@ -168,9 +168,10 @@
   .logout-btn { background: transparent; border: 1.5px solid #3B4C56; color: #B9C2C9; border-radius: 6px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
   @media (max-width: 640px) {
     .adminbar .headbar { flex-direction: column; align-items: stretch; }
-    .admin-controls { width: 100%; justify-content: space-between; }
-    .admin-tabs { flex: 1 1 auto; }
-    .admin-tabs button { font-size: 12px; padding: 7px 10px; }
+    .admin-controls { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+    .admin-tabs { flex-wrap: wrap; overflow-x: visible; width: 100%; }
+    .admin-tabs button { font-size: 12px; padding: 8px 10px; flex: 1 1 auto; min-width: 40%; }
+    .logout-btn { width: 100%; }
   }
   .admin-main { padding: 28px 0 60px; }
   .stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 18px; }
@@ -233,6 +234,11 @@
   .report-btn { background: var(--ok); color: #fff; border: none; border-radius: 6px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .report-btn:disabled { opacity: .5; cursor: default; }
   .clear-filter-btn { background: transparent; color: var(--steel); border: 1.5px solid var(--line); border-radius: 6px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .yeni-kayit-collapse { display: none; }
+  .yeni-kayit-collapse.acik { display: block; }
+  #toastContainer { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 8px; align-items: center; width: 92%; max-width: 420px; }
+  .toast { background: var(--ink); color: #fff; border-radius: 8px; padding: 12px 16px; font-size: 13.5px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px; border-left: 4px solid var(--safety); animation: toastIn .25s ease-out; }
+  @keyframes toastIn { from { opacity:0; transform: translateY(-10px);} to { opacity:1; transform: translateY(0);} }
   .view { display: none; }
   .view.on { display: block; }
 
@@ -509,12 +515,13 @@
 <div id="adminView" class="view">
   <div class="adminbar">
     <div class="wrap headbar">
-      <div class="brand display"><b class="brand-full">FGİ Kapı Yükleme Teknolojileri San. A.Ş.</b><b class="brand-short">FGİ</b> <span style="color:#8497A3; font-size:12px; font-weight:600; margin-left:8px;">/ Yönetici</span></div>
+      <div class="brand display"><b class="brand-full">FGİ Kapı Yükleme Teknolojileri San. A.Ş.</b><b class="brand-short">FGİ</b> <span style="color:#8497A3; font-size:12px; font-weight:600; margin-left:8px;" id="adminUserBadge">/ Yönetici</span></div>
       <div class="admin-controls">
         <div class="admin-tabs">
           <button id="atabServis" class="on" onclick="switchAdminTab('servis')">Servis Kayıtları</button>
           <button id="atabBakim" onclick="switchAdminTab('bakim')">Bakım Anlaşmaları</button>
           <button id="atabTeknisyen" onclick="switchAdminTab('teknisyen')">Teknisyenler</button>
+          <button id="atabKullanicilar" onclick="switchAdminTab('kullanicilar')">Kullanıcılar</button>
         </div>
         <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
       </div>
@@ -529,6 +536,52 @@
       <h1 class="sec-title display">Servis Kayıtları</h1>
       <p class="hint">Gelen arıza kayıtlarını buradan teknisyene atayıp servis tarihi planlayabilirsiniz. <span id="savingNoteServis" style="color:var(--safety); display:none;">Kaydediliyor…</span></p>
       <button class="detail-btn" style="margin-top:8px;" onclick="refreshServis()">Listeyi yenile</button>
+      <button class="detail-btn" style="margin-top:8px; margin-left:14px;" onclick="document.getElementById('adminYeniKayitWrap').classList.toggle('acik')">＋ Yeni Servis Kaydı Ekle</button>
+
+      <div id="adminYeniKayitWrap" class="yeni-kayit-collapse">
+        <form class="card" id="adminYeniKayitForm" style="max-width:640px; margin-top:14px;" novalidate>
+          <div id="adminYeniKayitBannerErr" class="banner-err">Kayıt gönderilemedi. Lütfen tekrar deneyin.</div>
+          <div class="row2">
+            <label id="ak_lblFirma">
+              <span class="flabel">Firma / Fabrika</span>
+              <input type="text" id="ak_firma" placeholder="Örn. Anadolu Metal A.Ş.">
+              <span class="ferr">Bu alan zorunlu</span>
+            </label>
+            <label id="ak_lblAlan">
+              <span class="flabel">Üretim Alanı / Hat</span>
+              <input type="text" id="ak_alan" placeholder="Örn. Montaj Hattı — Kesim İstasyonu">
+              <span class="ferr">Bu alan zorunlu</span>
+            </label>
+          </div>
+          <label>
+            <span class="flabel">Öncelik</span>
+            <div class="seg prio" id="segOncelikAdmin">
+              <button type="button" data-p="acil">Acil</button>
+              <button type="button" class="on" data-p="normal">Normal</button>
+              <button type="button" data-p="planli">Planlı</button>
+            </div>
+          </label>
+          <label id="ak_lblAciklama">
+            <span class="flabel">Arıza Açıklaması</span>
+            <textarea id="ak_aciklama" placeholder="Neler oluyor? Ne zaman başladı?"></textarea>
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+          <div class="row2">
+            <label id="ak_lblAd">
+              <span class="flabel">Yetkili Adı</span>
+              <input type="text" id="ak_ad" placeholder="Ad Soyad">
+              <span class="ferr">Bu alan zorunlu</span>
+            </label>
+            <label id="ak_lblTelefon">
+              <span class="flabel">Telefon</span>
+              <input type="text" id="ak_telefon" placeholder="05xx xxx xx xx">
+              <span class="ferr">Bu alan zorunlu</span>
+            </label>
+          </div>
+          <div id="adminYeniKayitErrSummary" class="banner-err">0 alan eksik — kırmızı işaretli alanları doldurun.</div>
+          <button type="submit" class="submit-btn" id="adminYeniKayitBtn">Kaydı Oluştur</button>
+        </form>
+      </div>
 
       <div class="stats">
         <div class="stat"><div class="v" id="statAcik" style="color:var(--steel)">0</div><div class="l">Açık Kayıt</div></div>
@@ -542,7 +595,7 @@
         <button class="chip" data-d="Yeni">Yeni</button>
         <button class="chip" data-d="Planlandı">Planlandı</button>
       </div>
-      <p style="font-size:12.5px; color:var(--steel-soft); margin-top:6px;">Tamamlanan kayıtlar burada listelenmez, veritabanında saklanır — görmek için aşağıdan "Rapor Al" ile indirin.</p>
+      <p style="font-size:12.5px; color:var(--steel-soft); margin-top:6px;">Tamamlanan kayıtlar burada listelenmez, veritabanında saklanır — görmek için aşağıdan yıl/tarih seçip "Listele" ile ekranda gösterin ya da "Rapor Al" ile indirin.</p>
 
       <div class="datebar">
         <div class="dfield">
@@ -558,8 +611,10 @@
           <input type="date" id="servisBitis">
         </div>
         <button class="clear-filter-btn" onclick="temizleServisTarihFiltre()">Filtreyi Temizle</button>
-        <button class="report-btn" onclick="raporAlServis()">⬇ Rapor Al (CSV)</button>
+        <button class="report-btn" style="background:var(--steel);" onclick="listeleServis()">📋 Listele</button>
+        <button class="report-btn" onclick="raporAlServis()">⬇ Rapor Al (Excel)</button>
       </div>
+      <div id="servisRaporBanner" style="display:none;"></div>
 
       <div id="servisList" class="reclist"></div>
       <div id="loadingServis" class="loading">Yükleniyor…</div>
@@ -598,7 +653,7 @@
           <input type="date" id="bakimBitis">
         </div>
         <button class="clear-filter-btn" onclick="temizleBakimTarihFiltre()">Filtreyi Temizle</button>
-        <button class="report-btn" onclick="raporAlBakim()">⬇ Rapor Al (CSV)</button>
+        <button class="report-btn" onclick="raporAlBakim()">⬇ Rapor Al (Excel)</button>
       </div>
 
       <div id="bakimList" class="reclist"></div>
@@ -645,6 +700,45 @@
 
       <div id="teknisyenList" class="reclist"></div>
     </div>
+
+    <div id="adminPanelKullanicilar" class="adminpanel">
+      <h1 class="sec-title display">Kullanıcılar</h1>
+      <p class="hint">Servis girişi yapacak ve atama yapacak kişiler için ayrı hesaplar tanımlayın. "Yönetici" rolü her şeyi yapabilir; "Servis Girişi" rolü sadece yeni kayıt oluşturabilir, atama/silme yapamaz.</p>
+
+      <form class="card" id="kullaniciForm" style="max-width:520px; margin-top:18px;" novalidate>
+        <div id="kullaniciBannerErr" class="banner-err">Bilgileri kontrol edin.</div>
+        <div class="row2">
+          <label id="kl_lblAd">
+            <span class="flabel">Ad Soyad</span>
+            <input type="text" id="kl_ad" placeholder="Örn. Ayşe Yılmaz">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+          <label>
+            <span class="flabel">Rol</span>
+            <select class="selstyle" id="kl_rol">
+              <option value="servisgirisi">Servis Girişi (sadece kayıt oluşturur)</option>
+              <option value="atama">Atama (servis kayıtlarını atar/kapatır)</option>
+              <option value="yonetici">Yönetici (tam yetki)</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label id="kl_lblKullanici">
+            <span class="flabel">Kullanıcı Adı</span>
+            <input type="text" id="kl_kullanici" placeholder="Örn. ayse.yilmaz">
+            <span class="ferr">Bu alan zorunlu, benzersiz olmalı</span>
+          </label>
+          <label id="kl_lblSifre">
+            <span class="flabel">Şifre</span>
+            <input type="text" id="kl_sifre" placeholder="Şifre belirleyin">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+        </div>
+        <button type="submit" class="submit-btn" style="background:var(--ink); color:#fff;">Kullanıcı Ekle</button>
+      </form>
+
+      <div id="kullaniciList" class="reclist" style="margin-top:20px;"></div>
+    </div>
   </div>
 </div>
 
@@ -668,6 +762,105 @@
   </div>
 </div>
 
+<div id="girisView" class="view">
+  <div class="adminbar">
+    <div class="wrap headbar">
+      <div class="brand display"><b class="brand-full">FGİ Kapı Yükleme Teknolojileri San. A.Ş.</b><b class="brand-short">FGİ</b> <span style="color:#8497A3; font-size:12px; font-weight:600; margin-left:8px;" id="girisKullaniciAdBadge">/ Servis Girişi</span></div>
+      <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+    </div>
+  </div>
+  <div class="hazard"></div>
+  <div class="wrap admin-main">
+    <div id="modeBadgeGiris"></div>
+    <h1 class="sec-title display">Servis Kaydı Oluştur</h1>
+    <p class="hint">Telefonla/yüz yüze aldığınız arıza bildirimini buradan sisteme girin. Atama ve kapatma işlemleri yöneticide yapılır.</p>
+
+    <div id="girisFormWrap">
+      <form class="card" id="girisForm" style="max-width:640px; margin-top:16px;" novalidate>
+        <div id="girisBannerErr" class="banner-err">Kayıt gönderilemedi. Lütfen tekrar deneyin.</div>
+        <div class="row2">
+          <label id="g_lblFirma">
+            <span class="flabel">Firma / Fabrika</span>
+            <input type="text" id="g_firma" placeholder="Örn. Anadolu Metal A.Ş.">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+          <label id="g_lblAlan">
+            <span class="flabel">Üretim Alanı / Hat</span>
+            <input type="text" id="g_alan" placeholder="Örn. Montaj Hattı — Kesim İstasyonu">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+        </div>
+        <label>
+          <span class="flabel">Öncelik</span>
+          <div class="seg prio" id="segOncelikGiris">
+            <button type="button" data-p="acil">Acil</button>
+            <button type="button" class="on" data-p="normal">Normal</button>
+            <button type="button" data-p="planli">Planlı</button>
+          </div>
+        </label>
+        <label id="g_lblAciklama">
+          <span class="flabel">Arıza Açıklaması</span>
+          <textarea id="g_aciklama" placeholder="Neler oluyor? Ne zaman başladı?"></textarea>
+          <span class="ferr">Bu alan zorunlu</span>
+        </label>
+        <div class="row2">
+          <label id="g_lblAd">
+            <span class="flabel">Yetkili Adı</span>
+            <input type="text" id="g_ad" placeholder="Ad Soyad">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+          <label id="g_lblTelefon">
+            <span class="flabel">Telefon</span>
+            <input type="text" id="g_telefon" placeholder="05xx xxx xx xx">
+            <span class="ferr">Bu alan zorunlu</span>
+          </label>
+        </div>
+        <div id="girisErrSummary" class="banner-err">0 alan eksik — kırmızı işaretli alanları doldurun.</div>
+        <button type="submit" class="submit-btn" id="girisSubmitBtn">Servis Kaydı Oluştur</button>
+      </form>
+    </div>
+    <div id="girisConfirm" class="confirm" style="display:none; max-width:640px;">
+      <div class="top">
+        <div class="t1">✓ Kayıt Oluşturuldu</div>
+        <div class="t2">Yönetici ekibi bilgilendirildi.</div>
+      </div>
+      <div class="body">
+        <div class="id" id="g_confId"></div>
+        <div class="sub">Takip numarası</div>
+        <button class="again-btn" onclick="resetGirisForm()">↺ Yeni Kayıt Gir</button>
+      </div>
+    </div>
+
+    <h2 class="sec-title display" style="font-size:18px; margin-top:34px;">Kayıtlar (salt okunur)</h2>
+    <p class="hint">Buradan hem açık hem tamamlanmış kayıtları görebilir, dilerseniz rapor indirebilirsiniz — atama/düzenleme/silme yapamazsınız.</p>
+    <button class="detail-btn" style="margin-top:8px;" onclick="refreshGirisListe()">Listeyi yenile</button>
+
+    <div class="datebar">
+      <div class="dfield">
+        <label>Yıl</label>
+        <select id="girisYilFilter"><option value="tumu">Tüm Yıllar</option></select>
+      </div>
+      <div class="dfield">
+        <label>Başlangıç Tarihi</label>
+        <input type="date" id="girisBaslangic">
+      </div>
+      <div class="dfield">
+        <label>Bitiş Tarihi</label>
+        <input type="date" id="girisBitis">
+      </div>
+      <button class="clear-filter-btn" onclick="temizleGirisTarihFiltre()">Filtreyi Temizle</button>
+      <button class="report-btn" style="background:var(--steel);" onclick="listeleGiris()">📋 Listele (Tamamlananlar Dahil)</button>
+      <button class="report-btn" onclick="raporAlGiris()">⬇ Rapor Al (Excel)</button>
+    </div>
+    <div id="girisRaporBanner" style="display:none;"></div>
+
+    <div id="girisList" class="reclist"></div>
+    <div id="loadingGirisListe" class="loading">Yükleniyor…</div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
 <button id="debugToggle" onclick="document.getElementById('debugBox').classList.toggle('open')">Teknik Kayıt</button>
 <div id="debugBox">
   <div class="dbg-head">
@@ -681,19 +874,25 @@
 const TICKETS_KEY = 'arizabakim:tickets';
 const AGREEMENTS_KEY = 'arizabakim:agreements';
 const TEKNISYENLER_KEY = 'arizabakim:teknisyenler';
+const KULLANICILAR_KEY = 'arizabakim:kullanicilar';
 let tickets = [];
 let agreements = [];
 let teknisyenler = [];
+let kullanicilar = [];
+let currentKullanici = null;
 let currentTeknisyen = null;
 let userRole = null;
 let durumFilter = 'Tümü';
 let bakimDurumFilter = 'Tümü';
 let servisYil = 'tumu', servisBas = '', servisBit = '';
+let servisRaporModu = false;
 let bakimYil = 'tumu', bakimBas = '', bakimBit = '';
 let openTicketId = null;
 let openAgreementId = null;
 let oncelik = 'normal';
 let isAdmin = false;
+let sonBilinenServisSayisi = null;
+let bildirimSesiCalinsin = false;
 
 const PRIO_LABEL = { acil: 'Acil', normal: 'Normal', planli: 'Planlı' };
 
@@ -790,6 +989,75 @@ async function loadTeknisyenler() {
 async function persistTeknisyenler() {
   try { const res = await storageSet(TEKNISYENLER_KEY, JSON.stringify(teknisyenler), true); return !!res; }
   catch (e) { dbg('Teknisyenler yazılamadı: ' + e.message, 'err'); return false; }
+}
+async function loadKullanicilar() {
+  try {
+    const res = await storageGet(KULLANICILAR_KEY, true);
+    const remote = res ? JSON.parse(res.value) : [];
+    const map = new Map();
+    remote.forEach(function(u){ map.set(u.id, u); });
+    kullanicilar.forEach(function(u){ if (!map.has(u.id)) map.set(u.id, u); });
+    kullanicilar = Array.from(map.values());
+    dbg('Kullanıcılar yüklendi: ' + kullanicilar.length, 'ok');
+  } catch (e) { dbg('Kullanıcılar okunamadı: ' + e.message, 'warn'); }
+}
+async function persistKullanicilar() {
+  try { const res = await storageSet(KULLANICILAR_KEY, JSON.stringify(kullanicilar), true); return !!res; }
+  catch (e) { dbg('Kullanıcılar yazılamadı: ' + e.message, 'err'); return false; }
+}
+function kullaniciNo() { return 'KL-' + Date.now().toString(36).toUpperCase(); }
+function gecmiseEkle(kayit, olay) {
+  if (!kayit.gecmis) kayit.gecmis = [];
+  kayit.gecmis.push({ zaman: new Date().toISOString(), olay: olay });
+}
+
+/* ===================== Otomatik Yenileme + Bildirim ===================== */
+let otomatikYenilemeTimer = null;
+let bilinenServisIdleri = new Set();
+const OTOMATIK_YENILEME_MS = 30000;
+
+function baslatOtomatikYenileme() {
+  durdurOtomatikYenileme();
+  bilinenServisIdleri = new Set(tickets.map(function(t){ return t.id; }));
+  otomatikYenilemeTimer = setInterval(otomatikYenilemeTick, OTOMATIK_YENILEME_MS);
+}
+function durdurOtomatikYenileme() {
+  if (otomatikYenilemeTimer) { clearInterval(otomatikYenilemeTimer); otomatikYenilemeTimer = null; }
+}
+async function otomatikYenilemeTick() {
+  if (!userRole) { durdurOtomatikYenileme(); return; }
+  await loadTickets();
+  const yeniler = tickets.filter(function(t){ return !bilinenServisIdleri.has(t.id); });
+  if (yeniler.length > 0) {
+    bipCal();
+    bildirimGoster((yeniler.length === 1 ? '1 yeni servis kaydı geldi' : yeniler.length + ' yeni servis kaydı geldi') + ': ' + yeniler.map(function(t){ return t.id; }).join(', '));
+  }
+  tickets.forEach(function(t){ bilinenServisIdleri.add(t.id); });
+  if (userRole === 'admin' && document.getElementById('adminPanelServis').classList.contains('on')) renderServisUI();
+  if (userRole === 'servisgirisi') renderGirisListUI();
+  if (userRole === 'teknisyen') renderTeknisyenGorevUI();
+}
+function bildirimGoster(mesaj) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = '🔔 ' + escapeHtml(mesaj);
+  container.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 6000);
+}
+function bipCal() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) { /* ses çıkmazsa sessizce geç */ }
 }
 function photoSrc(rec) {
   if (rec.fotografKey) return '/api/photo?key=' + encodeURIComponent(rec.fotografKey);
@@ -910,6 +1178,13 @@ function fmtDate(iso) {
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ' +
          d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 }
+function gecmisHtml(kayit) {
+  if (!kayit.gecmis || kayit.gecmis.length === 0) return '';
+  const satirlar = kayit.gecmis.map(function(g){
+    return '<div style="display:flex; gap:8px; font-size:12px; color:var(--steel); padding:3px 0;"><span style="color:var(--steel-soft); flex-shrink:0;">' + fmtDate(g.zaman) + '</span><span>' + escapeHtml(g.olay) + '</span></div>';
+  }).join('');
+  return '<details style="margin-top:12px;"><summary style="font-size:11px; font-weight:700; color:var(--steel); text-transform:uppercase; letter-spacing:.4px; cursor:pointer;">Kayıt Geçmişi (' + kayit.gecmis.length + ')</summary><div style="margin-top:6px; padding:8px 10px; background:var(--paper); border-radius:6px;">' + satirlar + '</div></details>';
+}
 function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
 function toCSVCell(v) {
@@ -998,17 +1273,67 @@ async function tryLogin() {
   document.getElementById('loginErr').style.display = 'none';
 
   if (u === 'admin' && p === 'admin123') {
-    isAdmin = true; userRole = 'admin';
+    isAdmin = true; userRole = 'admin'; currentKullanici = null;
     document.getElementById('adminLoginView').classList.remove('on');
     document.getElementById('adminView').classList.add('on');
-    await Promise.all([loadTickets(), loadAgreements(), loadTeknisyenler()]);
+    document.getElementById('adminUserBadge').textContent = '/ Yönetici';
+    await Promise.all([loadTickets(), loadAgreements(), loadTeknisyenler(), loadKullanicilar()]);
     const badge = document.getElementById('modeBadge');
     badge.innerHTML = usingRealApi
       ? '<span class="mode-badge real">Kalıcı depolama aktif — kayıtlar cihazlar arası saklanır</span>'
       : '<span class="mode-badge mem">Geçici hafıza modu — kayıtlar bu oturumda tutulur, sayfa kapanınca silinir</span>';
     document.getElementById('loadingServis').style.display = 'none';
     document.getElementById('loadingBakim').style.display = 'none';
+    uygulaRolGorunurlugu('admin');
     switchAdminTab('servis');
+    baslatOtomatikYenileme();
+    return;
+  }
+
+  await loadKullanicilar();
+  const kul = kullanicilar.find(function(k){ return k.kullaniciAdi === u && k.sifre === p; });
+  if (kul && kul.rol === 'yonetici') {
+    isAdmin = true; userRole = 'admin'; currentKullanici = kul;
+    document.getElementById('adminLoginView').classList.remove('on');
+    document.getElementById('adminView').classList.add('on');
+    document.getElementById('adminUserBadge').textContent = '/ ' + kul.ad + ' (Yönetici)';
+    await Promise.all([loadTickets(), loadAgreements(), loadTeknisyenler(), loadKullanicilar()]);
+    const badge = document.getElementById('modeBadge');
+    badge.innerHTML = usingRealApi
+      ? '<span class="mode-badge real">Kalıcı depolama aktif — kayıtlar cihazlar arası saklanır</span>'
+      : '<span class="mode-badge mem">Geçici hafıza modu — kayıtlar bu oturumda tutulur, sayfa kapanınca silinir</span>';
+    document.getElementById('loadingServis').style.display = 'none';
+    document.getElementById('loadingBakim').style.display = 'none';
+    uygulaRolGorunurlugu('admin');
+    switchAdminTab('servis');
+    baslatOtomatikYenileme();
+    return;
+  }
+  if (kul && kul.rol === 'atama') {
+    isAdmin = true; userRole = 'atama'; currentKullanici = kul;
+    document.getElementById('adminLoginView').classList.remove('on');
+    document.getElementById('adminView').classList.add('on');
+    document.getElementById('adminUserBadge').textContent = '/ ' + kul.ad + ' (Atama)';
+    await Promise.all([loadTickets(), loadTeknisyenler()]);
+    const badge = document.getElementById('modeBadge');
+    badge.innerHTML = usingRealApi
+      ? '<span class="mode-badge real">Kalıcı depolama aktif — kayıtlar cihazlar arası saklanır</span>'
+      : '<span class="mode-badge mem">Geçici hafıza modu — kayıtlar bu oturumda tutulur, sayfa kapanınca silinir</span>';
+    document.getElementById('loadingServis').style.display = 'none';
+    uygulaRolGorunurlugu('atama');
+    switchAdminTab('servis');
+    baslatOtomatikYenileme();
+    return;
+  }
+  if (kul && kul.rol === 'servisgirisi') {
+    userRole = 'servisgirisi'; currentKullanici = kul;
+    document.getElementById('adminLoginView').classList.remove('on');
+    document.getElementById('girisView').classList.add('on');
+    document.getElementById('girisKullaniciAdBadge').textContent = '/ ' + kul.ad;
+    await loadTickets();
+    document.getElementById('loadingGirisListe').style.display = 'none';
+    renderGirisListUI();
+    baslatOtomatikYenileme();
     return;
   }
 
@@ -1026,29 +1351,42 @@ async function tryLogin() {
       : '<span class="mode-badge mem">Geçici hafıza modu — kayıtlar bu oturumda tutulur</span>';
     document.getElementById('loadingTeknisyenGorev').style.display = 'none';
     renderTeknisyenGorevUI();
+    baslatOtomatikYenileme();
     return;
   }
 
   document.getElementById('loginErr').style.display = 'block';
 }
 function logout() {
-  isAdmin = false; userRole = null; currentTeknisyen = null;
+  isAdmin = false; userRole = null; currentTeknisyen = null; currentKullanici = null;
+  durdurOtomatikYenileme();
   document.getElementById('adminView').classList.remove('on');
   document.getElementById('teknisyenView').classList.remove('on');
+  document.getElementById('girisView').classList.remove('on');
   document.getElementById('publicView').classList.add('on');
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
+function uygulaRolGorunurlugu(rol) {
+  const kisitli = rol === 'atama';
+  document.getElementById('atabBakim').style.display = kisitli ? 'none' : '';
+  document.getElementById('atabTeknisyen').style.display = kisitli ? 'none' : '';
+  document.getElementById('atabKullanicilar').style.display = kisitli ? 'none' : '';
+}
 function switchAdminTab(v) {
+  if (userRole === 'atama' && v !== 'servis') v = 'servis';
   document.getElementById('atabServis').classList.toggle('on', v === 'servis');
   document.getElementById('atabBakim').classList.toggle('on', v === 'bakim');
   document.getElementById('atabTeknisyen').classList.toggle('on', v === 'teknisyen');
+  document.getElementById('atabKullanicilar').classList.toggle('on', v === 'kullanicilar');
   document.getElementById('adminPanelServis').classList.toggle('on', v === 'servis');
   document.getElementById('adminPanelBakim').classList.toggle('on', v === 'bakim');
   document.getElementById('adminPanelTeknisyen').classList.toggle('on', v === 'teknisyen');
+  document.getElementById('adminPanelKullanicilar').classList.toggle('on', v === 'kullanicilar');
   if (v === 'servis') renderServisUI();
   if (v === 'bakim') renderBakimUI();
   if (v === 'teknisyen') renderTeknisyenlerUI();
+  if (v === 'kullanicilar') renderKullanicilarUI();
 }
 
 document.getElementById('segOncelik').addEventListener('click', function(e) {
@@ -1056,6 +1394,160 @@ document.getElementById('segOncelik').addEventListener('click', function(e) {
   oncelik = btn.dataset.p;
   Array.from(e.currentTarget.children).forEach(function(b){ b.classList.toggle('on', b === btn); });
 });
+
+/* ===================== SERVİS GİRİŞİ ROLÜ ===================== */
+let oncelikGiris = 'normal';
+document.getElementById('segOncelikGiris').addEventListener('click', function(e) {
+  const btn = e.target.closest('button'); if (!btn) return;
+  oncelikGiris = btn.dataset.p;
+  Array.from(e.currentTarget.children).forEach(function(b){ b.classList.toggle('on', b === btn); });
+});
+const G_REQUIRED = { g_firma: 1, g_alan: 1, g_aciklama: 1, g_ad: 1, g_telefon: 1 };
+document.getElementById('girisForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  document.getElementById('girisBannerErr').style.display = 'none';
+  let errCount = 0, firstErrEl = null;
+  Object.keys(G_REQUIRED).forEach(function(key) {
+    const input = document.getElementById(key);
+    const label = document.getElementById('g_lbl' + key.slice(2,3).toUpperCase() + key.slice(3));
+    const bad = !input.value.trim();
+    label.classList.toggle('error', bad);
+    if (bad) { errCount++; if (!firstErrEl) firstErrEl = label; }
+  });
+  const summary = document.getElementById('girisErrSummary');
+  if (errCount > 0) {
+    summary.textContent = errCount + ' alan eksik — kırmızı işaretli alanları doldurun.';
+    summary.style.display = 'block';
+    if (firstErrEl) firstErrEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  summary.style.display = 'none';
+
+  const btn = document.getElementById('girisSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  await loadTickets();
+
+  const yeni = {
+    id: ticketNo('AB', tickets),
+    firma: document.getElementById('g_firma').value.trim(),
+    alan: document.getElementById('g_alan').value.trim(),
+    oncelik: oncelikGiris,
+    aciklama: document.getElementById('g_aciklama').value.trim(),
+    ad: document.getElementById('g_ad').value.trim(),
+    telefon: document.getElementById('g_telefon').value.trim(),
+    durum: 'Yeni', teknisyen: '', teknisyenId: '', planlananTarih: '', kapanisNotu: '', fotograf: '',
+    olusturanKullanici: currentKullanici ? currentKullanici.ad : '',
+    gecmis: [],
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  };
+  gecmiseEkle(yeni, 'Oluşturuldu' + (currentKullanici ? (' — ' + currentKullanici.ad) : ''));
+  tickets = [yeni].concat(tickets);
+  const ok = await persistTickets();
+  btn.disabled = false; btn.textContent = 'Servis Kaydı Oluştur';
+
+  if (!ok) {
+    document.getElementById('girisBannerErr').style.display = 'block';
+    tickets = tickets.filter(function(t){ return t.id !== yeni.id; });
+    return;
+  }
+  document.getElementById('girisFormWrap').style.display = 'none';
+  document.getElementById('girisConfirm').style.display = 'block';
+  document.getElementById('g_confId').textContent = yeni.id;
+  renderGirisListUI();
+});
+function resetGirisForm() {
+  document.getElementById('girisForm').reset();
+  Object.keys(G_REQUIRED).forEach(function(key) {
+    document.getElementById('g_lbl' + key.slice(2,3).toUpperCase() + key.slice(3)).classList.remove('error');
+  });
+  document.getElementById('girisErrSummary').style.display = 'none';
+  oncelikGiris = 'normal';
+  document.querySelectorAll('#segOncelikGiris button').forEach(function(b){ b.classList.toggle('on', b.dataset.p === 'normal'); });
+  document.getElementById('girisFormWrap').style.display = 'block';
+  document.getElementById('girisConfirm').style.display = 'none';
+}
+async function refreshGirisListe() {
+  document.getElementById('loadingGirisListe').style.display = 'block';
+  await loadTickets();
+  document.getElementById('loadingGirisListe').style.display = 'none';
+  renderGirisListUI();
+}
+let girisYil = 'tumu', girisBas = '', girisBit = '';
+let girisRaporModu = false;
+document.getElementById('girisYilFilter').addEventListener('change', function(e){ girisYil = e.target.value; if (girisRaporModu) listeleGiris(); else renderGirisListUI(); });
+document.getElementById('girisBaslangic').addEventListener('change', function(e){ girisBas = e.target.value; if (girisRaporModu) listeleGiris(); else renderGirisListUI(); });
+document.getElementById('girisBitis').addEventListener('change', function(e){ girisBit = e.target.value; if (girisRaporModu) listeleGiris(); else renderGirisListUI(); });
+function temizleGirisTarihFiltre() {
+  girisYil = 'tumu'; girisBas = ''; girisBit = ''; girisRaporModu = false;
+  document.getElementById('girisYilFilter').value = 'tumu';
+  document.getElementById('girisBaslangic').value = '';
+  document.getElementById('girisBitis').value = '';
+  renderGirisListUI();
+}
+function listeleGiris() { girisRaporModu = true; renderGirisListUI(); }
+function girisNormalGorunumeDon() { girisRaporModu = false; renderGirisListUI(); }
+function raporAlGiris() {
+  const filtered = tickets.filter(function(t){
+    return yilUyuyorMu(t.createdAt, girisYil) && tarihAraligindaMi(t.createdAt, girisBas, girisBit);
+  });
+  const headers = ['ID','Firma','Alan','Öncelik','Açıklama','Yetkili','Telefon','Durum','Teknisyen','Planlanan Tarih','Kapanış Notu','Oluşturma Tarihi','Kapanış Tarihi'];
+  const rows = filtered.map(function(t){
+    return [t.id, t.firma, t.alan, PRIO_LABEL[t.oncelik] || t.oncelik, t.aciklama, t.ad, t.telefon, t.durum, t.teknisyen || '', t.planlananTarih || '', t.kapanisNotu || '', fmtDate(t.createdAt), t.kapanisZamani ? fmtDate(t.kapanisZamani) : ''];
+  });
+  downloadExcel('servis_kayitlari_raporu', headers, rows, 'Servis Kayıtları');
+}
+function renderGirisListUI() {
+  yilDoldur(document.getElementById('girisYilFilter'), tickets, 'createdAt', girisYil);
+  const list = document.getElementById('girisList');
+  const banner = document.getElementById('girisRaporBanner');
+
+  let gosterilecek;
+  if (girisRaporModu) {
+    gosterilecek = tickets.filter(function(t){
+      return yilUyuyorMu(t.createdAt, girisYil) && tarihAraligindaMi(t.createdAt, girisBas, girisBit);
+    }).sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+    const araDesc = (girisYil !== 'tumu' ? girisYil + ' yılı' : (girisBas || girisBit ? (girisBas || '…') + ' – ' + (girisBit || '…') : 'tüm zamanlar'));
+    banner.style.display = 'block';
+    banner.innerHTML = '<div style="background:#EDF1F3; border:1.5px solid var(--steel); border-radius:8px; padding:12px 14px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+      '<span style="font-size:13.5px; color:var(--ink);"><b>📋 Rapor görünümü</b> — ' + escapeHtml(araDesc) + ' — <b>' + gosterilecek.length + '</b> kayıt (açık + kapalı hepsi)</span>' +
+      '<button class="clear-filter-btn" onclick="girisNormalGorunumeDon()">✕ Normal Görünüme Dön</button>' +
+    '</div>';
+  } else {
+    gosterilecek = tickets.filter(function(t){ return t.durum !== 'Tamamlandı'; })
+      .sort(function(a,b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
+
+  if (gosterilecek.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="t">Bu filtreye uyan kayıt yok</div><div style="font-size:13px;margin-top:2px;">' + (girisRaporModu ? 'Seçtiğiniz aralıkta kayıt bulunamadı.' : 'Yeni bir kayıt oluşturduğunuzda burada görünecek.') + '</div></div>';
+    return;
+  }
+  list.innerHTML = gosterilecek.map(function(t) {
+    const isAcil = t.oncelik === 'acil' && t.durum !== 'Tamamlandı';
+    const isDone = t.durum === 'Tamamlandı';
+    const stampClass = t.durum === 'Planlandı' ? 'planlandi' : (t.durum === 'Tamamlandı' ? 'tamamlandi' : '');
+    return '' +
+      '<div class="rec ' + (isAcil ? 'acil' : '') + ' ' + (isDone ? 'done' : '') + '">' +
+        '<div class="bar"></div>' +
+        '<div class="body2">' +
+          '<div class="rhead">' +
+            '<div>' +
+              '<div class="rmeta"><span class="rid">' + t.id + '</span><span class="pchip ' + t.oncelik + '">' + PRIO_LABEL[t.oncelik].toUpperCase() + '</span></div>' +
+              '<div class="rfirma"><b>' + escapeHtml(t.firma) + '</b><span class="alan">— ' + escapeHtml(t.alan) + '</span></div>' +
+              '<p class="rdesc">' + escapeHtml(t.aciklama) + '</p>' +
+              '<div class="rfoot"><span>' + escapeHtml(t.ad) + '</span><span>' + escapeHtml(t.telefon) + '</span><span>' + fmtDate(t.createdAt) + '</span>' +
+                (t.teknisyen ? '<span>Teknisyen: ' + escapeHtml(t.teknisyen) + '</span>' : '') +
+              '</div>' +
+              (isDone ? '<div style="margin-top:6px; font-size:12.5px; color:var(--steel);">' + (escapeHtml(t.kapanisNotu) || '—') + '</div>' : '') +
+            '</div>' +
+            '<div class="rright"><span class="stamp ' + stampClass + '">' + t.durum.toUpperCase() + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
 
 const S_REQUIRED = { s_firma: 1, s_alan: 1, s_aciklama: 1, s_ad: 1, s_telefon: 1 };
 document.getElementById('servisForm').addEventListener('submit', async function(e) {
@@ -1092,8 +1584,10 @@ document.getElementById('servisForm').addEventListener('submit', async function(
     ad: document.getElementById('s_ad').value.trim(),
     telefon: document.getElementById('s_telefon').value.trim(),
     durum: 'Yeni', teknisyen: '', teknisyenId: '', planlananTarih: '', kapanisNotu: '', fotograf: '',
+    gecmis: [],
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   };
+  gecmiseEkle(yeni, 'Oluşturuldu — müşteri formu');
   tickets = [yeni].concat(tickets);
   const ok = await persistTickets();
   btn.disabled = false; btn.textContent = 'Servis Kaydı Oluştur';
@@ -1199,20 +1693,89 @@ function resetBakimForm() {
   document.getElementById('bakimConfirm').style.display = 'none';
 }
 
+let oncelikAdmin = 'normal';
+document.getElementById('segOncelikAdmin').addEventListener('click', function(e) {
+  const btn = e.target.closest('button'); if (!btn) return;
+  oncelikAdmin = btn.dataset.p;
+  Array.from(e.currentTarget.children).forEach(function(b){ b.classList.toggle('on', b === btn); });
+});
+const AK_REQUIRED = { ak_firma: 1, ak_alan: 1, ak_aciklama: 1, ak_ad: 1, ak_telefon: 1 };
+document.getElementById('adminYeniKayitForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  document.getElementById('adminYeniKayitBannerErr').style.display = 'none';
+  let errCount = 0, firstErrEl = null;
+  Object.keys(AK_REQUIRED).forEach(function(key) {
+    const input = document.getElementById(key);
+    const label = document.getElementById('ak_lbl' + key.slice(3,4).toUpperCase() + key.slice(4));
+    const bad = !input.value.trim();
+    label.classList.toggle('error', bad);
+    if (bad) { errCount++; if (!firstErrEl) firstErrEl = label; }
+  });
+  const summary = document.getElementById('adminYeniKayitErrSummary');
+  if (errCount > 0) {
+    summary.textContent = errCount + ' alan eksik — kırmızı işaretli alanları doldurun.';
+    summary.style.display = 'block';
+    if (firstErrEl) firstErrEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  summary.style.display = 'none';
+  const btn = document.getElementById('adminYeniKayitBtn');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+  await loadTickets();
+  const yeni = {
+    id: ticketNo('AB', tickets),
+    firma: document.getElementById('ak_firma').value.trim(),
+    alan: document.getElementById('ak_alan').value.trim(),
+    oncelik: oncelikAdmin,
+    aciklama: document.getElementById('ak_aciklama').value.trim(),
+    ad: document.getElementById('ak_ad').value.trim(),
+    telefon: document.getElementById('ak_telefon').value.trim(),
+    durum: 'Yeni', teknisyen: '', teknisyenId: '', planlananTarih: '', kapanisNotu: '', fotograf: '',
+    gecmis: [],
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+  };
+  gecmiseEkle(yeni, 'Oluşturuldu' + (currentKullanici ? (' — ' + currentKullanici.ad) : ' — Yönetici'));
+  tickets = [yeni].concat(tickets);
+  const ok = await persistTickets();
+  btn.disabled = false; btn.textContent = 'Kaydı Oluştur';
+  if (!ok) {
+    document.getElementById('adminYeniKayitBannerErr').style.display = 'block';
+    tickets = tickets.filter(function(t){ return t.id !== yeni.id; });
+    return;
+  }
+  document.getElementById('adminYeniKayitForm').reset();
+  Object.keys(AK_REQUIRED).forEach(function(key) {
+    document.getElementById('ak_lbl' + key.slice(3,4).toUpperCase() + key.slice(4)).classList.remove('error');
+  });
+  oncelikAdmin = 'normal';
+  Array.from(document.getElementById('segOncelikAdmin').children).forEach(function(b){ b.classList.toggle('on', b.dataset.p === 'normal'); });
+  document.getElementById('adminYeniKayitWrap').classList.remove('acik');
+  renderServisUI();
+});
+
 document.getElementById('durumFilters').addEventListener('click', function(e) {
   const btn = e.target.closest('button'); if (!btn) return;
   durumFilter = btn.dataset.d;
+  servisRaporModu = false;
   Array.from(document.getElementById('durumFilters').querySelectorAll('.chip')).forEach(function(b){ b.classList.toggle('on', b === btn); });
   renderServisUI();
 });
-document.getElementById('servisYilFilter').addEventListener('change', function(e){ servisYil = e.target.value; renderServisUI(); });
-document.getElementById('servisBaslangic').addEventListener('change', function(e){ servisBas = e.target.value; renderServisUI(); });
-document.getElementById('servisBitis').addEventListener('change', function(e){ servisBit = e.target.value; renderServisUI(); });
+document.getElementById('servisYilFilter').addEventListener('change', function(e){ servisYil = e.target.value; if (servisRaporModu) listeleServis(); else renderServisUI(); });
+document.getElementById('servisBaslangic').addEventListener('change', function(e){ servisBas = e.target.value; if (servisRaporModu) listeleServis(); else renderServisUI(); });
+document.getElementById('servisBitis').addEventListener('change', function(e){ servisBit = e.target.value; if (servisRaporModu) listeleServis(); else renderServisUI(); });
 function temizleServisTarihFiltre() {
-  servisYil = 'tumu'; servisBas = ''; servisBit = '';
+  servisYil = 'tumu'; servisBas = ''; servisBit = ''; servisRaporModu = false;
   document.getElementById('servisYilFilter').value = 'tumu';
   document.getElementById('servisBaslangic').value = '';
   document.getElementById('servisBitis').value = '';
+  renderServisUI();
+}
+function listeleServis() {
+  servisRaporModu = true;
+  renderServisUI();
+}
+function servisNormalGorunumeDon() {
+  servisRaporModu = false;
   renderServisUI();
 }
 function raporAlServis() {
@@ -1254,10 +1817,23 @@ function renderServisUI() {
   document.getElementById('statPlanlandi').textContent = planlandi;
   document.getElementById('statTamam').textContent = tamam;
 
-  const filtered = servisFiltrele();
+  const banner = document.getElementById('servisRaporBanner');
+  const filtered = servisRaporModu ? servisRaporFiltrele() : servisFiltrele();
+  if (servisRaporModu) {
+    const araDesc = (servisYil !== 'tumu' ? servisYil + ' yılı' : (servisBas || servisBit ? (servisBas || '…') + ' – ' + (servisBit || '…') : 'tüm zamanlar'));
+    banner.style.display = 'block';
+    banner.innerHTML = '<div style="background:#EDF1F3; border:1.5px solid var(--steel); border-radius:8px; padding:12px 14px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">' +
+      '<span style="font-size:13.5px; color:var(--ink);"><b>📋 Rapor görünümü</b> — ' + escapeHtml(araDesc) + ' — <b>' + filtered.length + '</b> kayıt (açık + kapalı hepsi)</span>' +
+      '<button class="clear-filter-btn" onclick="servisNormalGorunumeDon()">✕ Normal Görünüme Dön</button>' +
+    '</div>';
+  } else {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+  }
+
   const list = document.getElementById('servisList');
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="t">Bu filtreye uyan kayıt yok</div><div style="font-size:13px;margin-top:2px;">Yeni bir bildirim geldiğinde burada görünecek.</div></div>';
+    list.innerHTML = '<div class="empty"><div class="t">Bu filtreye uyan kayıt yok</div><div style="font-size:13px;margin-top:2px;">' + (servisRaporModu ? 'Seçtiğiniz aralıkta kayıt bulunamadı.' : 'Yeni bir bildirim geldiğinde burada görünecek.') + '</div></div>';
     return;
   }
   list.innerHTML = filtered.map(function(t) {
@@ -1276,7 +1852,8 @@ function renderServisUI() {
         '<div style="margin-top:14px;"><span class="flabel">Kapanış Notu</span><div style="font-size:14px; color:var(--ink); line-height:1.5;">' + (escapeHtml(t.kapanisNotu) || '—') + '</div></div>' +
         ((t.fotografKey || t.fotograf) ? '<div style="margin-top:10px;"><span class="flabel">İş Fotoğrafı</span><img class="photo-thumb" src="' + photoSrc(t) + '"></div>' : '') +
         '<div style="margin-top:10px; font-size:12px; color:var(--ok); font-weight:700;">✓ Bu kayıt kapatıldı — ' + (t.kapanisZamani ? fmtDate(t.kapanisZamani) : fmtDate(t.updatedAt)) + '</div>' +
-        '<button class="danger-btn" onclick="silServisKaydi(\'' + t.id + '\')">Kaydı Sil</button>' +
+        gecmisHtml(t) +
+        (userRole !== 'atama' ? '<button class="danger-btn" onclick="silServisKaydi(\'' + t.id + '\')">Kaydı Sil</button>' : '') +
       '</div>'
     ) : (
       '<div class="detail ' + (open ? 'open' : '') + '">' +
@@ -1300,17 +1877,20 @@ function renderServisUI() {
         '</div>' +
         '<button class="save-btn" onclick="planlaVeBildir(\'' + t.id + '\')">Teknisyen Ata ve Tarih Planla (SMS gönder)</button>' +
         (t.smsLog ? '<div class="notice-sim">' + escapeHtml(t.smsLog) + '</div>' : '') +
-        '<label style="margin-top:14px;">' +
-          '<span class="flabel">Kapanış Notu</span>' +
-          '<textarea id="notu-' + t.id + '" placeholder="Yapılan işlem, kullanılan parça, çözüm...">' + escapeHtml(t.kapanisNotu) + '</textarea>' +
-        '</label>' +
-        '<label>' +
-          '<span class="flabel">📷 İş Fotoğrafı Ekle (opsiyonel)</span>' +
-          '<input type="file" id="adminfoto-' + t.id + '" accept="image/*" onchange="onAdminFotoSelect(\'' + t.id + '\')">' +
-          '<div id="adminfoto-preview-' + t.id + '">' + ((t.fotografKey || t.fotograf) ? '<img class="photo-thumb" src="' + photoSrc(t) + '">' : '') + '</div>' +
-        '</label>' +
-        '<button class="save-btn" style="background:var(--ink);" onclick="tamamla(\'' + t.id + '\')">İşi Tamamla ve Kapat</button>' +
-        '<button class="danger-btn" onclick="silServisKaydi(\'' + t.id + '\')">Kaydı Sil</button>' +
+        (userRole !== 'atama' ? (
+          '<label style="margin-top:14px;">' +
+            '<span class="flabel">Kapanış Notu</span>' +
+            '<textarea id="notu-' + t.id + '" placeholder="Yapılan işlem, kullanılan parça, çözüm...">' + escapeHtml(t.kapanisNotu) + '</textarea>' +
+          '</label>' +
+          '<label>' +
+            '<span class="flabel">📷 İş Fotoğrafı Ekle (opsiyonel)</span>' +
+            '<input type="file" id="adminfoto-' + t.id + '" accept="image/*" onchange="onAdminFotoSelect(\'' + t.id + '\')">' +
+            '<div id="adminfoto-preview-' + t.id + '">' + ((t.fotografKey || t.fotograf) ? '<img class="photo-thumb" src="' + photoSrc(t) + '">' : '') + '</div>' +
+          '</label>' +
+          '<button class="save-btn" style="background:var(--ink);" onclick="tamamla(\'' + t.id + '\')">İşi Tamamla ve Kapat</button>' +
+          '<button class="danger-btn" onclick="silServisKaydi(\'' + t.id + '\')">Kaydı Sil</button>'
+        ) : '<p style="font-size:12px; color:var(--steel-soft); margin-top:14px;">İşi tamamlama ve kayıt silme yetkisi bu hesapta bulunmuyor.</p>') +
+        gecmisHtml(t) +
       '</div>'
     );
     return '' +
@@ -1342,15 +1922,22 @@ function renderServisUI() {
 }
 function toggleTicketDetail(id) { openTicketId = openTicketId === id ? null : id; renderServisUI(); }
 async function planlaVeBildir(id) {
-  const t = tickets.find(function(x){ return x.id === id; }); if (!t) return;
   const tekId = document.getElementById('tek-' + id).value;
   const tarih = document.getElementById('tarih-' + id).value.trim();
   if (!tekId) { alert('Lütfen bir teknisyen seçin.'); return; }
   if (!tarih) { alert('Lütfen bir servis tarihi/saati girin.'); return; }
+  document.getElementById('savingNoteServis').style.display = 'inline';
+  await Promise.all([loadTickets(), loadTeknisyenler()]);
+  const t = tickets.find(function(x){ return x.id === id; });
+  if (!t) {
+    document.getElementById('savingNoteServis').style.display = 'none';
+    alert('Bu kayıt artık mevcut değil (başka biri silmiş olabilir). Liste yenilendi.');
+    openTicketId = null; renderServisUI(); return;
+  }
   const tek = teknisyenler.find(function(x){ return x.id === tekId; });
   t.teknisyenId = tekId; t.teknisyen = tek ? tek.ad : ''; t.planlananTarih = tarih; t.durum = 'Planlandı'; t.updatedAt = new Date().toISOString();
+  gecmiseEkle(t, 'Teknisyen atandı: ' + (tek ? tek.ad : '(bilinmiyor)') + ' — planlanan: ' + tarih + (currentKullanici ? (' — ' + currentKullanici.ad) : ''));
   t.smsLog = '(Demo SMS) ' + t.telefon + ' numarasına gönderildi: "FGİ Kapı Yükleme: ' + t.id + ' numaralı servis kaydınız ' + tarih + ' tarihine planlandı."';
-  document.getElementById('savingNoteServis').style.display = 'inline';
   await persistTickets();
   if (tek) { tek.durum = 'Meşgul'; await persistTeknisyenler(); }
   document.getElementById('savingNoteServis').style.display = 'none';
@@ -1366,14 +1953,21 @@ async function serbestBirakTeknisyen(teknisyenId) {
   }
 }
 async function tamamla(id) {
-  const t = tickets.find(function(x){ return x.id === id; }); if (!t) return;
+  document.getElementById('savingNoteServis').style.display = 'inline';
+  await loadTickets();
+  const t = tickets.find(function(x){ return x.id === id; });
+  if (!t) {
+    document.getElementById('savingNoteServis').style.display = 'none';
+    alert('Bu kayıt artık mevcut değil. Liste yenilendi.');
+    openTicketId = null; renderServisUI(); return;
+  }
   t.kapanisNotu = document.getElementById('notu-' + id).value.trim();
   if (pendingAdminPhotos[id]) {
     const key = await uploadPhotoToBlobs(pendingAdminPhotos[id], id);
     if (key) { t.fotografKey = key; } else { t.fotograf = pendingAdminPhotos[id]; }
   }
   t.durum = 'Tamamlandı'; t.kapanisZamani = new Date().toISOString(); t.updatedAt = new Date().toISOString();
-  document.getElementById('savingNoteServis').style.display = 'inline';
+  gecmiseEkle(t, 'Tamamlandı' + (currentKullanici ? (' — ' + currentKullanici.ad) : ''));
   await persistTickets();
   await serbestBirakTeknisyen(t.teknisyenId);
   delete pendingAdminPhotos[id];
@@ -1382,11 +1976,16 @@ async function tamamla(id) {
   renderServisUI();
 }
 async function silServisKaydi(id) {
-  const t = tickets.find(function(x){ return x.id === id; }); if (!t) return;
-  if (!confirm(t.id + ' numaralı servis kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+  if (!confirm(id + ' numaralı servis kaydını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+  document.getElementById('savingNoteServis').style.display = 'inline';
+  await loadTickets();
+  const t = tickets.find(function(x){ return x.id === id; });
+  if (!t) {
+    document.getElementById('savingNoteServis').style.display = 'none';
+    renderServisUI(); return;
+  }
   const teknisyenId = t.teknisyenId;
   tickets = tickets.filter(function(x){ return x.id !== id; });
-  document.getElementById('savingNoteServis').style.display = 'inline';
   await persistTickets();
   if (teknisyenId) await serbestBirakTeknisyen(teknisyenId);
   document.getElementById('savingNoteServis').style.display = 'none';
@@ -1486,30 +2085,34 @@ function renderBakimUI() {
 }
 function toggleAgreementDetail(id) { openAgreementId = openAgreementId === id ? null : id; renderBakimUI(); }
 async function sozlesmeYukle(id) {
-  const a = agreements.find(function(x){ return x.id === id; }); if (!a) return;
   const fileInput = document.getElementById('dosya-' + id);
   const fname = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : '';
   if (!fname) { alert('Lütfen bir sözleşme dosyası seçin.'); return; }
+  document.getElementById('savingNoteBakim').style.display = 'inline';
+  await loadAgreements();
+  const a = agreements.find(function(x){ return x.id === id; });
+  if (!a) { document.getElementById('savingNoteBakim').style.display = 'none'; renderBakimUI(); return; }
   a.sozlesmeDosyaAdi = fname; a.durum = 'Sözleşme Yüklendi'; a.updatedAt = new Date().toISOString();
   a.mailLog = '(Demo E-posta) ' + a.eposta + ' adresine gönderildi: "FGİ Kapı Yükleme: Bakım anlaşmanız (' + a.id + ') hazır. Ek: ' + fname + '."';
-  document.getElementById('savingNoteBakim').style.display = 'inline';
   await persistAgreements();
   document.getElementById('savingNoteBakim').style.display = 'none';
   openAgreementId = id; renderBakimUI();
 }
 async function aktifEt(id) {
-  const a = agreements.find(function(x){ return x.id === id; }); if (!a) return;
-  a.durum = 'Aktif'; a.updatedAt = new Date().toISOString();
   document.getElementById('savingNoteBakim').style.display = 'inline';
+  await loadAgreements();
+  const a = agreements.find(function(x){ return x.id === id; });
+  if (!a) { document.getElementById('savingNoteBakim').style.display = 'none'; renderBakimUI(); return; }
+  a.durum = 'Aktif'; a.updatedAt = new Date().toISOString();
   await persistAgreements();
   document.getElementById('savingNoteBakim').style.display = 'none';
   renderBakimUI();
 }
 async function silBakimAnlasmasi(id) {
-  const a = agreements.find(function(x){ return x.id === id; }); if (!a) return;
-  if (!confirm(a.id + ' numaralı bakım anlaşması başvurusunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
-  agreements = agreements.filter(function(x){ return x.id !== id; });
+  if (!confirm(id + ' numaralı bakım anlaşması başvurusunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
   document.getElementById('savingNoteBakim').style.display = 'inline';
+  await loadAgreements();
+  agreements = agreements.filter(function(x){ return x.id !== id; });
   await persistAgreements();
   document.getElementById('savingNoteBakim').style.display = 'none';
   openAgreementId = null;
@@ -1611,6 +2214,83 @@ async function silTeknisyen(id) {
   renderTeknisyenlerUI();
 }
 
+/* ===================== ADMIN: Kullanıcılar ===================== */
+document.getElementById('kullaniciForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  document.getElementById('kullaniciBannerErr').style.display = 'none';
+  const fields = ['kl_ad', 'kl_kullanici', 'kl_sifre'];
+  let errCount = 0, firstErrEl = null;
+  fields.forEach(function(key) {
+    const input = document.getElementById(key);
+    const label = document.getElementById(key.replace('kl_', 'kl_lbl'));
+    const bad = !input.value.trim();
+    if (label) label.classList.toggle('error', bad);
+    if (bad) { errCount++; if (!firstErrEl) firstErrEl = label; }
+  });
+  if (errCount > 0) {
+    if (firstErrEl) firstErrEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  await Promise.all([loadKullanicilar(), loadTeknisyenler()]);
+  const kullanici = document.getElementById('kl_kullanici').value.trim();
+  const dup = kullanici === 'admin' ||
+    kullanicilar.some(function(k){ return k.kullaniciAdi === kullanici; }) ||
+    teknisyenler.some(function(t){ return t.kullaniciAdi === kullanici; });
+  if (dup) {
+    document.getElementById('kullaniciBannerErr').textContent = 'Bu kullanıcı adı zaten kullanılıyor.';
+    document.getElementById('kullaniciBannerErr').style.display = 'block';
+    return;
+  }
+  const yeni = {
+    id: kullaniciNo(),
+    ad: document.getElementById('kl_ad').value.trim(),
+    rol: document.getElementById('kl_rol').value,
+    kullaniciAdi: kullanici,
+    sifre: document.getElementById('kl_sifre').value.trim(),
+    createdAt: new Date().toISOString(),
+  };
+  kullanicilar = [yeni].concat(kullanicilar);
+  await persistKullanicilar();
+  document.getElementById('kullaniciForm').reset();
+  renderKullanicilarUI();
+});
+function renderKullanicilarUI() {
+  const list = document.getElementById('kullaniciList');
+  if (kullanicilar.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="t">Henüz kullanıcı eklenmedi</div><div style="font-size:13px;margin-top:2px;">Yukarıdaki formdan servis girişi veya yönetici hesabı ekleyin.</div></div>';
+    return;
+  }
+  list.innerHTML = kullanicilar.map(function(k) {
+    const rolLabel = k.rol === 'yonetici' ? 'Yönetici' : 'Servis Girişi';
+    const rolColor = k.rol === 'yonetici' ? 'var(--ink)' : 'var(--steel)';
+    return '' +
+      '<div class="rec">' +
+        '<div class="bar" style="background:' + rolColor + ';"></div>' +
+        '<div class="body2">' +
+          '<div class="rhead">' +
+            '<div>' +
+              '<div class="rfirma"><b>' + escapeHtml(k.ad) + '</b></div>' +
+              '<div class="rfoot" style="margin-top:6px;">' +
+                '<span>Kullanıcı adı: ' + escapeHtml(k.kullaniciAdi) + '</span>' +
+                '<span>Rol: ' + rolLabel + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="rright">' +
+              '<button class="detail-btn" style="color:var(--alert);" onclick="silKullanici(\'' + k.id + '\')">Sil</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }).join('');
+}
+async function silKullanici(id) {
+  const k = kullanicilar.find(function(x){ return x.id === id; }); if (!k) return;
+  if (!confirm(k.ad + ' adlı kullanıcıyı silmek istediğinize emin misiniz?')) return;
+  kullanicilar = kullanicilar.filter(function(x){ return x.id !== id; });
+  await persistKullanicilar();
+  renderKullanicilarUI();
+}
+
 /* ===================== TEKNİSYEN PORTALI ===================== */
 async function refreshTeknisyenGorevleri() {
   document.getElementById('loadingTeknisyenGorev').style.display = 'block';
@@ -1659,7 +2339,6 @@ function renderTeknisyenGorevUI() {
   }).join('');
 }
 async function teknisyenTamamla(id) {
-  const t = tickets.find(function(x){ return x.id === id; }); if (!t) return;
   const errBox = document.getElementById('tekerr-' + id);
   errBox.style.display = 'none';
   const notu = document.getElementById('teknotu-' + id).value.trim();
@@ -1676,12 +2355,21 @@ async function teknisyenTamamla(id) {
     try { fotoData = await compressImage(file); }
     catch (e) { fotoWarning = 'Fotoğraf işlenemedi, notunuz fotoğrafsız kaydedildi.'; }
   }
+  await loadTickets();
+  const t = tickets.find(function(x){ return x.id === id; });
+  if (!t) {
+    errBox.textContent = 'Bu kayıt artık mevcut değil.';
+    errBox.style.display = 'block';
+    renderTeknisyenGorevUI();
+    return;
+  }
   t.kapanisNotu = notu;
   if (fotoData) {
     const key = await uploadPhotoToBlobs(fotoData, id);
     if (key) { t.fotografKey = key; } else { t.fotograf = fotoData; }
   }
   t.durum = 'Tamamlandı'; t.kapanisZamani = new Date().toISOString(); t.updatedAt = new Date().toISOString();
+  gecmiseEkle(t, 'Teknisyen tarafından tamamlandı' + (currentTeknisyen ? (' — ' + currentTeknisyen.ad) : ''));
   const ok = await persistTickets();
   if (!ok) { errBox.textContent = 'Kayıt gönderilemedi, lütfen tekrar deneyin.'; errBox.style.display = 'block'; return; }
   delete pendingPhotos[id];
